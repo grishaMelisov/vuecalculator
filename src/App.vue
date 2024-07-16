@@ -1,33 +1,35 @@
 <template>
-    <div class="calculator">
-        <input
-            type="text"
-            v-model="operation_display"
-            class="operation_display"
-            disabled
-        />
+    <div class="wrapper">
+        <div class="calculator">
+            <input
+                type="text"
+                v-model="operation_display"
+                class="operation_display"
+                disabled
+            />
 
-        <input
-            type="text"
-            v-model="display"
-            class="display"
-            placeholder="0"
-            disabled
-        />
+            <input
+                type="text"
+                v-model="display"
+                class="display"
+                placeholder="0"
+                disabled
+            />
 
-        <div class="buttons">
-            <button
-                v-for="btn in buttons"
-                :key="btn.value"
-                @click="update(btn)"
-                :class="`button button_${
-                    btn.type || 'default'
-                }`"
-            >
-                <span class="inner_text">
-                    {{ btn.value }}
-                </span>
-            </button>
+            <div class="buttons">
+                <button
+                    v-for="btn in buttons"
+                    :key="btn.value"
+                    @click="update(btn)"
+                    :class="`button button_${
+                        btn.type || 'default'
+                    }`"
+                >
+                    <span class="inner_text">
+                        {{ btn.value }}
+                    </span>
+                </button>
+            </div>
         </div>
     </div>
 </template>
@@ -173,6 +175,14 @@ export default {
                 display.value = '';
                 isOperator.value = false;
             }
+
+            if (
+                value.value === ',' &&
+                display.value === '0'
+            ) {
+                console.log(display.value);
+            }
+
             display.value += value.value;
             operation_display.value += value.value;
         };

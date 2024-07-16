@@ -2,7 +2,7 @@
   font-family: 'Geometria', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
+  box-sizing: border-box;
 
   color: rgba(255, 255, 255, 0.87);
   background: linear-gradient(122.76deg, #FFA2A2 4.09%, #FF7B7B 91.04%);
@@ -13,6 +13,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -29,7 +33,12 @@ h1 {
   line-height: 1.1;
 }
 
-
+.wrapper {
+  background-color: rgba(255, 255, 255, 0.2);
+  width: min-content;
+  padding: 38px 31px;
+  border-radius: 18px;
+}
 
 .calculator {
   background: linear-gradient(155.23deg, #28518E 0%, #3A77D1 100%);
@@ -37,6 +46,8 @@ h1 {
   border-radius: 18px;
   width: min-content;
   max-width: 554px;
+  box-shadow: 3px 10px 18px 1px rgba(34, 60, 80, 0.45);
+
 }
 
 .operation_display {
@@ -78,7 +89,10 @@ h1 {
   display: grid;
   grid-template-columns: repeat(4, 1fr); 
   grid-template-rows: repeat(3, auto); 
-  gap: 10px 20px;
+  align-items: center;
+  justify-items: center;
+  margin: 0 10px;
+  gap: 16px 50px;
 
   font-size: 36px;
 
@@ -87,7 +101,7 @@ h1 {
   }
   
 
-  > button {
+  > .button {
     color: #F2F2F2;
     border-radius: 50%;
     height: 80px;
@@ -105,10 +119,39 @@ h1 {
       background-color: rgba(255, 255, 255, 0.2);
       transition: all 0.1s ease;
     }
+  }
+
+  .button_result {
+    color: rgba(43, 88, 154, 1);
+    background-color: rgba(255, 255, 255, 0.75)
+  }
+}
+
+@media (max-width: 370px) {
+  .calculator {
+    padding: 0;
+    border-radius: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Запретить скроллинг */
+  }
+
+  .display {
+    padding: 0 5px;
+  }
+
+  .operation_display {
+    padding: 50px 5px 0;
+  }
+
+  .buttons {
+    gap: unset;
+    margin: 0;
 
   }
-  
-
 }
 
 
