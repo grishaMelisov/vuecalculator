@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Geometria';
-  src: url('@/assets/fonts/Geometria.woff2') format('woff2');
+  src: url('./assets/fonts/Geometria.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: 'Geometria';
-  src: url('@/assets/fonts/Geometria-bold.woff2') format('woff2');
+  src: url('./assets/fonts/Geometria-Bold.woff2') format('woff2');
   font-weight: bold;
   font-style: normal;
 }
