@@ -3,8 +3,8 @@
         <div class="calculator">
             <input
                 type="text"
-                v-model="operation_display"
-                class="operation_display"
+                v-model="small_display"
+                class="small_display"
                 disabled
             />
 
@@ -20,7 +20,7 @@
                 <button
                     v-for="btn in buttons"
                     :key="btn.value"
-                    @click="update(btn)"
+                    @click="clickHandler(btn)"
                     :class="`button button_${
                         btn.type || 'default'
                     }`"
@@ -39,17 +39,20 @@ import { ref } from 'vue';
 
 export default {
     setup() {
-        const operation_display = ref('');
+        const small_display = ref('');
         const display = ref('');
-        const currentNumber = ref('');
-        const previousNumber = ref('');
-        const currentOperator = ref('');
-        const isOperator = ref(false);
-        const result = ref(0);
+
+        const operator = ref('');
+        const prevNumber = ref('');
+        const result = ref(null) as any;
+
+        const needNewNumber = ref(false);
+        const isCalculated = ref(false);
+
         const buttons = [
             { value: 'AC', type: 'clear' },
-            { value: '√', type: 'operator' },
-            { value: '%', type: 'operator' },
+            { value: '√', type: 'spec' },
+            { value: '%', type: 'spec' },
             { value: '/', type: 'operator' },
 
             { value: '7' },
@@ -67,157 +70,191 @@ export default {
             { value: '3' },
             { value: '+', type: 'operator' },
 
-            { value: '00' },
-            { value: '0' },
-            { value: ',' },
+            { value: '00', type: 'spec' },
+            { value: '0', type: 'spec' },
+            { value: ',', type: 'spec' },
             { value: '=', type: 'result' }
         ];
 
-        const update = (value: any) => {
-            if (value.type === 'clear') {
-                display.value = '';
-                operation_display.value = '';
-                currentNumber.value = '';
-                previousNumber.value = '';
-                currentOperator.value = '';
-                result.value = 0;
-                return;
-            }
+        const clickHandler = (btn: any) => {
+            switch (btn.type) {
+                case 'clear':
+                    display.value = '';
+                    small_display.value = '';
+                    prevNumber.value = '';
+                    operator.value = '';
+                    result.value = null;
+                    needNewNumber.value = false;
+                    isCalculated.value = false;
+                    break;
 
-            if (display.value.length > 10) {
-                return;
-            }
+                case 'operator':
+                    const lastChar =
+                        small_display.value[
+                            small_display.value.length - 1
+                        ];
 
-            if (value.type === 'result') {
-                if (
-                    previousNumber.value &&
-                    display.value &&
-                    currentOperator.value
-                ) {
-                    calculate();
-                    display.value = result.value
-                        .toString()
-                        .replace('.', ',');
-                    if (display.value.length > 10) {
-                        display.value = Number(
-                            display.value
-                        )
-                            .toPrecision(8)
-                            .replace('e+', 'e')
-                            .replace('.', ',');
+                    if (operator.value && !isCalculated) {
+                        calculate();
                     }
+                    needNewNumber.value = true;
+                    operator.value = btn.value;
 
-                    isOperator.value = false;
-                    currentOperator.value = '';
-                    return;
-                }
-                return;
-            }
-
-            if (value.type === 'operator') {
-                if (!display.value) {
-                    return;
-                }
-
-                if (value.value === '√') {
-                    display.value = Math.sqrt(
-                        Number(display.value)
-                    )
-                        .toPrecision(10)
-                        .replace('.', ',');
-
-                    return;
-                }
-
-                if (value.value === '%') {
-                    if (
-                        !isOperator.value &&
-                        !currentOperator.value
-                    ) {
-                        display.value = (
-                            Number(display.value) / 100
-                        )
-                            .toString()
-                            .replace('.', ',');
+                    if (isNaN(lastChar)) {
+                        small_display.value =
+                            small_display.value.slice(
+                                0,
+                                -1
+                            ) + btn.value;
                     } else {
-                        display.value = (
-                            (parseFloat(
-                                previousNumber.value
-                            ) /
-                                100) *
-                            parseFloat(display.value)
-                        )
-                            .toString()
-                            .replace('.', ',');
-                        operation_display.value += '%';
+                        small_display.value += btn.value;
+                    }
+                    break;
+
+                case 'spec':
+                    specialCalculate(btn.value);
+                    break;
+
+                case 'result':
+                    calculate();
+                    operator.value = '';
+                    needNewNumber.value = true;
+                    break;
+
+                default:
+                    if (
+                        needNewNumber.value ||
+                        display.value === result.value
+                    ) {
+                        prevNumber.value = display.value;
+                        needNewNumber.value = false;
+                        display.value = '';
                     }
 
+                    display.value += btn.value;
+                    small_display.value += btn.value;
+
+                    isCalculated.value = false;
                     return;
-                }
-
-                isOperator.value = true;
-
-                if (currentOperator.value) {
-                    calculate();
-                    display.value = result.value
-                        .toPrecision(8)
-                        .replace('e+', 'e');
-                }
-
-                currentOperator.value = value.value;
-                previousNumber.value = display.value;
-
-                operation_display.value += value.value;
-                return;
             }
-
-            if (isOperator.value) {
-                display.value = '';
-                isOperator.value = false;
-            }
-
-            if (
-                value.value === ',' &&
-                display.value === '0'
-            ) {
-                console.log(display.value);
-            }
-
-            display.value += value.value;
-            operation_display.value += value.value;
         };
 
         const calculate = () => {
-            const num1 = parseFloat(
-                previousNumber.value.replace(',', '.')
-            );
-            const num2 = parseFloat(
-                display.value.replace(',', '.')
-            );
+            if (isCalculated.value || !display.value) {
+                return;
+            }
 
-            switch (currentOperator.value) {
+            if (!prevNumber.value) {
+                prevNumber.value = '0';
+            }
+
+            needNewNumber.value = true;
+
+            const num1 = parseFloat(prevNumber.value);
+            const num2 = parseFloat(display.value);
+
+            switch (operator.value) {
                 case '+':
-                    result.value = num1 + num2;
+                    result.value = (num1 + num2).toString();
+                    display.value = result.value;
                     break;
+
                 case '-':
-                    result.value = num1 - num2;
+                    result.value = (num1 - num2).toString();
+                    display.value = result.value;
                     break;
+
                 case '×':
-                    result.value = num1 * num2;
+                    result.value = (num1 * num2).toString();
+                    display.value = result.value;
                     break;
+
                 case '/':
-                    result.value = num1 / num2;
+                    result.value = (num1 / num2).toString();
+                    display.value = result.value;
                     break;
+
+                default:
+                    return;
+            }
+
+            isCalculated.value = true;
+        };
+
+        const specialCalculate = (spec: string) => {
+            const num = Number(display.value);
+
+            switch (spec) {
+                case '%':
+                    if (prevNumber.value) {
+                        if (
+                            operator.value === '×' ||
+                            operator.value === '/'
+                        ) {
+                            display.value = (
+                                Number(display.value) / 100
+                            ).toString();
+                        } else {
+                            display.value = (
+                                (Number(display.value) *
+                                    Number(
+                                        prevNumber.value
+                                    )) /
+                                100
+                            ).toString();
+                        }
+                    } else {
+                        display.value = (
+                            Number(display.value) / 100
+                        ).toString();
+                    }
+                    break;
+
+                case '√':
+                    display.value = Math.sqrt(
+                        Number(display.value)
+                    ).toString();
+                    break;
+
+                case '0':
+                    if (display.value.length < 1) {
+                        display.value += '0';
+                    }
+
+                    if (
+                        display.value.includes('.') ||
+                        num !== 0
+                    ) {
+                        display.value += '0';
+                    }
+                    break;
+
+                case '00':
+                    if (Number(display.value) > 0) {
+                        display.value += '00';
+                    }
+                    break;
+
+                case ',':
+                    if (
+                        Number.isInteger(num) &&
+                        display.value &&
+                        !display.value.includes('.')
+                    ) {
+                        display.value += '.';
+                    }
+                    break;
+
                 default:
                     return;
             }
         };
 
         return {
-            operation_display,
+            small_display,
             display,
             buttons,
-            update
+            clickHandler
         };
     }
 };
